@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require 'alkanet/agent'
+require 'optparse'
+
+option = ARGV.getopts('', 'url:', 'analyze')
+Alkanet::Agent::Runner.run option
