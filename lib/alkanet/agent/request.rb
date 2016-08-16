@@ -37,6 +37,10 @@ module Alkanet
           report: Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
         }
       end
+
+      def update_tracer_info(id, params)
+        @api_clinet.put "/api/tracers/#{id}.json", params
+      end
     end
   end
 end

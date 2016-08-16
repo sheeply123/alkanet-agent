@@ -18,8 +18,6 @@ module Alkanet
           puts 'execute alk-logcat'
           tracelog = logcat(job)
 
-          # TODO: shutdown
-
           if option['analyze']
             puts 'execute alk-analyze2'
             analyze(job, tracelog)
@@ -27,6 +25,12 @@ module Alkanet
             puts 'skip analyze'
           end
 
+          puts 'poweroff tracer'
+          if power('poweroff')
+            update_tracer_info(tracer[:id], {status: 'poweroff'})
+          end
+
+          puts 'done'
           api_clinet.update_job_info(job[:id], {status: 'done'})
         rescue OptionError, MissingInfoError => e
           STDERR.puts e.message
@@ -34,7 +38,7 @@ module Alkanet
         rescue FailedLogcatError => e
           STDERR.puts e
           api_clinet.update_job_info(job[:id], {status: 'assigned'})
-          # TODO: reboot
+          power('reset')
           exit(-1)
         rescue FailedAnalyzeError => e
           STDERR.puts e.message
@@ -43,12 +47,9 @@ module Alkanet
         rescue Faraday::Error::ClientError => e
           STDERR.puts e.message
           res = e.response
-          if res
-            json = res[:body]
-            if json
-              Array(json[:errors]).each do |error|
-                STDERR.puts error[:message]
-              end
+          if res && res[:body]
+            Array(res[:body][:errors]).each do |error|
+              STDERR.puts error[:message]
             end
           end
           exit(-1)
@@ -94,7 +95,7 @@ module Alkanet
 
         def logcat(job)
           tracelog = Tempfile.new("tracelog#{job[:id]}")
-          LogcatAdaptor.run(tracelog, 30) do
+            Adaptor::Logcat.run(tracelog, 30) do
             api_clinet.update_job_info(job[:id], {status: 'collecting'})
           end
 
@@ -106,11 +107,17 @@ module Alkanet
         def analyze(job, logfile)
           api_clinet.update_job_info(job[:id], {status: 'analyzing'})
           report = Tempfile.new("report#{job[:id]}")
-          AnalyzeAdaptor.run(report, logfile, job[:name])
+          Adaptor::Analyze.run(report, logfile, job[:name])
 
           api_clinet.upload_report(job[:id], report.path)
           api_clinet.update_job_info(job[:id], {status: 'analyzed'})
           report
+        end
+
+        def poewr(type)
+          Adaptor::Power.run(type)
+        rescue FailedPowerError => e
+          STDERR.puts e.message
         end
       end
     end
