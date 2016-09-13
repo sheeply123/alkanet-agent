@@ -3,12 +3,12 @@ module Alkanet
     module Adaptor
       module Logcat
         class << self
-          def run(file, second = 30)
+          def run(file, opt = {addr: nil, time: 30})
             start_flag = false
 
-            IO.popen("sudo alk-logcat -o #{file.path} -t #{second}") do |pipe|
+            IO.popen("sudo alk-logcat #{opt[:addr]} -o #{file.path} -t #{opt[:time]} -q") do |pipe|
               pipe.each do |line|
-                if !start_flag && line == 'CAPTURE START'
+                if !start_flag && line.start_with?('CAPTURE START')
                   # success to start logcat
                   yield
                   start_flag = true

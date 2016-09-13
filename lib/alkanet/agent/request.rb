@@ -10,7 +10,7 @@ module Alkanet
           conn.request  :url_encoded
           conn.response :raise_error
           conn.response :multi_json, symbolize_keys: true
-          conn.adapter  Faraday.default_adapter
+          conn.adapter  :httpclient
         end
       end
 
@@ -29,17 +29,17 @@ module Alkanet
       def upload_tracelog(id, tracelog)
         @api_clinet.post "/api/jobs/#{id}/tracelog", {
           tracelog: Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
-        }
+        } do |req|
+          req.options.timeout = 0
+        end
       end
 
       def upload_report(id, tracelog)
         @api_clinet.post "/api/jobs/#{id}/report", {
           report: Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
-        }
-      end
-
-      def update_tracer_info(id, params)
-        @api_clinet.put "/api/tracers/#{id}.json", params
+        } do |req|
+          req.options.timeout = 0
+        end
       end
     end
   end

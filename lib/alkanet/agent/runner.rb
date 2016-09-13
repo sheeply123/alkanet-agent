@@ -1,3 +1,5 @@
+require 'tempfile'
+
 module Alkanet
   module Agent
     module Runner
@@ -18,31 +20,39 @@ module Alkanet
           puts 'execute alk-logcat'
           tracelog = logcat(job)
 
+          puts 'poweroff tracer'
+          if power('poweroff')
+            api_clinet.update_job_info(job[:id], {status: 'poweroff_tracer'})
+          end
+
+          puts 'upload tracelog'
+          upload_tracelog(job, tracelog)
+
           if option['analyze']
-            puts 'execute alk-analyze2'
+            puts 'execute alk-analyze2 and upload report'
             analyze(job, tracelog)
           else
             puts 'skip analyze'
           end
 
-          puts 'poweroff tracer'
-          if power('poweroff')
-            update_tracer_info(tracer[:id], {status: 'poweroff'})
-          end
-
           puts 'done'
           api_clinet.update_job_info(job[:id], {status: 'done'})
+
         rescue OptionError, MissingInfoError => e
           STDERR.puts e.message
           exit(-1)
         rescue FailedLogcatError => e
           STDERR.puts e
           api_clinet.update_job_info(job[:id], {status: 'assigned'})
-          power('reset')
+          begin
+            power('reset')
+          rescue FailedPowerError => e
+            STDERR.puts e
+          end
           exit(-1)
-        rescue FailedAnalyzeError => e
-          STDERR.puts e.message
-          # TODO: rollback status
+        rescue FailedPowerError => e
+          STDERR.puts e
+          api_clinet.update_job_info(job[:id], {status: 'assigned'})
           exit(-1)
         rescue Faraday::Error::ClientError => e
           STDERR.puts e.message
@@ -95,29 +105,35 @@ module Alkanet
 
         def logcat(job)
           tracelog = Tempfile.new("tracelog#{job[:id]}")
-            Adaptor::Logcat.run(tracelog, 30) do
+          Adaptor::Logcat.run(tracelog, addr: option['addr'], time: option['time']) do
             api_clinet.update_job_info(job[:id], {status: 'collecting'})
           end
 
-          api_clinet.upload_tracelog(job[:id], tracelog.path)
           api_clinet.update_job_info(job[:id], {status: 'collected'})
           tracelog
         end
 
-        def analyze(job, logfile)
-          api_clinet.update_job_info(job[:id], {status: 'analyzing'})
-          report = Tempfile.new("report#{job[:id]}")
-          Adaptor::Analyze.run(report, logfile, job[:name])
-
-          api_clinet.upload_report(job[:id], report.path)
-          api_clinet.update_job_info(job[:id], {status: 'analyzed'})
-          report
+        def upload_tracelog(job, tracelog)
+          api_clinet.update_job_info(job[:id], {status: 'uploading_tracelog'})
+          api_clinet.upload_tracelog(job[:id], tracelog.path)
+          api_clinet.update_job_info(job[:id], {status: 'uploaded_tracelog'})
         end
 
-        def poewr(type)
-          Adaptor::Power.run(type)
-        rescue FailedPowerError => e
+        def analyze(job, tracelog)
+          api_clinet.update_job_info(job[:id], {status: 'analyzing'})
+          report = Tempfile.new("report#{job[:id]}")
+          Adaptor::Analyze.run(report, tracelog, job[:name])
+          api_clinet.update_job_info(job[:id], {status: 'analyzed'})
+
+          api_clinet.update_job_info(job[:id], {status: 'uploading_report'})
+          api_clinet.upload_report(job[:id], report.path)
+          api_clinet.update_job_info(job[:id], {status: 'uploaded_report'})
+        rescue FailedAnalyzeError => e
           STDERR.puts e.message
+        end
+
+        def power(type)
+          Adaptor::Power.run(addr: option['addr'], type: type)
         end
       end
     end

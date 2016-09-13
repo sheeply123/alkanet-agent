@@ -3,5 +3,5 @@
 require 'alkanet/agent'
 require 'optparse'
 
-option = ARGV.getopts('', 'url:', 'analyze')
+option = ARGV.getopts('', 'url:', 'analyze', 'time:300', 'addr:')
 Alkanet::Agent::Runner.run option
