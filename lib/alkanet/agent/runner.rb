@@ -22,7 +22,7 @@ module Alkanet
 
           puts 'poweroff tracer'
           if power('poweroff')
-            api_clinet.update_job_info(job[:id], {status: 'poweroff_tracer'})
+            api_clinet.update_job_info(job[:id], status: 'poweroff_tracer')
           end
 
           puts 'upload tracelog'
@@ -36,14 +36,14 @@ module Alkanet
           end
 
           puts 'done'
-          api_clinet.update_job_info(job[:id], {status: 'done'})
+          api_clinet.update_job_info(job[:id], status: 'done')
 
         rescue OptionError, MissingInfoError => e
           STDERR.puts e.message
           exit(-1)
         rescue FailedLogcatError => e
           STDERR.puts e
-          api_clinet.update_job_info(job[:id], {status: 'assigned'})
+          api_clinet.update_job_info(job[:id], status: 'assigned')
           begin
             power('reset')
           rescue FailedPowerError => e

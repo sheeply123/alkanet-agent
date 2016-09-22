@@ -15,19 +15,19 @@ module Alkanet
       end
 
       def fetch_collector_info
-        @api_clinet.get "/api/collectors/oneself.json"
+        @api_clinet.get "/api/internal/collectors/oneself.json"
       end
 
       def fetch_job_info(id)
-        @api_clinet.get "/api/jobs/#{id}.json"
+        @api_clinet.get "/api/internal/jobs/#{id}.json"
       end
 
       def update_job_info(id, params)
-        @api_clinet.put "/api/jobs/#{id}.json", params
+        @api_clinet.put "/api/internal/jobs/#{id}.json", params
       end
 
       def upload_tracelog(id, tracelog)
-        @api_clinet.post "/api/jobs/#{id}/tracelog", {
+        @api_clinet.post "/api/internal/jobs/#{id}/tracelog", {
           tracelog: Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
         } do |req|
           req.options.timeout = 0
@@ -35,7 +35,7 @@ module Alkanet
       end
 
       def upload_report(id, tracelog)
-        @api_clinet.post "/api/jobs/#{id}/report", {
+        @api_clinet.post "/api/internal/jobs/#{id}/report", {
           report: Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
         } do |req|
           req.options.timeout = 0
