@@ -1,23 +1,23 @@
+require 'English'
+
 module Alkanet
   module Agent
     module Adaptor
       module Logcat
         class << self
-          def run(file, opt = {addr: nil, time: 30})
+          def run(file, addr:, time: 30)
             start_flag = false
 
-            IO.popen("sudo alk-logcat #{opt[:addr]} -o #{file.path} -t #{opt[:time]} -q") do |pipe|
+            IO.popen("sudo alk-logcat #{addr} -o #{file.path} -t #{time} -q") do |pipe|
               pipe.each do |line|
-                if !start_flag && line.start_with?('CAPTURE START')
-                  # success to start logcat
-                  yield
-                  start_flag = true
-                end
+                next unless !start_flag && line.start_with?('CAPTURE START')
+                # success to start logcat
+                yield
+                start_flag = true
               end
             end
 
-            status = $?
-            raise FailedLogcatError, 'faild to execute alk-logcat' unless status.success?
+            raise FailedLogcatError, 'faild to execute alk-logcat' unless $CHILD_STATUS.success?
           end
         end
       end

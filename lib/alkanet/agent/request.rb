@@ -15,29 +15,27 @@ module Alkanet
       end
 
       def fetch_collector_info
-        @api_clinet.get "/api/internal/collectors/oneself.json"
+        @api_clinet.get('/internal/api/collectors/oneself.json')
       end
 
       def fetch_job_info(id)
-        @api_clinet.get "/api/internal/jobs/#{id}.json"
+        @api_clinet.get("/internal/api/jobs/#{id}.json")
       end
 
       def update_job_info(id, params)
-        @api_clinet.put "/api/internal/jobs/#{id}.json", params
+        @api_clinet.put("/internal/api/jobs/#{id}.json", params)
       end
 
       def upload_tracelog(id, tracelog)
-        @api_clinet.post "/api/internal/jobs/#{id}/tracelog", {
-          tracelog: Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
-        } do |req|
+        tracelog_io = Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
+        @api_clinet.post("/internal/api/jobs/#{id}/tracelog", tracelog: tracelog_io) do |req|
           req.options.timeout = 0
         end
       end
 
       def upload_report(id, tracelog)
-        @api_clinet.post "/api/internal/jobs/#{id}/report", {
-          report: Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
-        } do |req|
+        tracelog_io = Faraday::UploadIO.new(tracelog, 'binary/octet-stream')
+        @api_clinet.post("/internal/api/jobs/#{id}/report", report: tracelog_io) do |req|
           req.options.timeout = 0
         end
       end

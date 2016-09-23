@@ -21,9 +21,8 @@ module Alkanet
           tracelog = logcat(job)
 
           puts 'poweroff tracer'
-          if power('poweroff')
-            api_clinet.update_job_info(job[:id], status: 'poweroff_tracer')
-          end
+          power('poweroff')
+          api_clinet.update_job_info(job[:id], status: 'poweroff_tracer')
 
           puts 'upload tracelog'
           upload_tracelog(job, tracelog)
@@ -52,7 +51,7 @@ module Alkanet
           exit(-1)
         rescue FailedPowerError => e
           STDERR.puts e
-          api_clinet.update_job_info(job[:id], {status: 'assigned'})
+          api_clinet.update_job_info(job[:id], status: 'assigned')
           exit(-1)
         rescue Faraday::Error::ClientError => e
           STDERR.puts e.message
@@ -67,9 +66,7 @@ module Alkanet
 
         private
 
-        def option
-          @option
-        end
+        attr_reader :option
 
         def option=(opt)
           raise OptionError, 'URL option is required' unless opt['url']
@@ -96,9 +93,7 @@ module Alkanet
         def wait_changed_job_status(job, status)
           loop do
             json = api_clinet.fetch_job_info(job[:id]).body
-            if json[:job][:status] == status
-              return
-            end
+            return if json[:job][:status] == status
             sleep 3
           end
         end
@@ -106,28 +101,28 @@ module Alkanet
         def logcat(job)
           tracelog = Tempfile.new("tracelog#{job[:id]}")
           Adaptor::Logcat.run(tracelog, addr: option['addr'], time: option['time']) do
-            api_clinet.update_job_info(job[:id], {status: 'collecting'})
+            api_clinet.update_job_info(job[:id], status: 'collecting')
           end
 
-          api_clinet.update_job_info(job[:id], {status: 'collected'})
+          api_clinet.update_job_info(job[:id], status: 'collected')
           tracelog
         end
 
         def upload_tracelog(job, tracelog)
-          api_clinet.update_job_info(job[:id], {status: 'uploading_tracelog'})
+          api_clinet.update_job_info(job[:id], status: 'uploading_tracelog')
           api_clinet.upload_tracelog(job[:id], tracelog.path)
-          api_clinet.update_job_info(job[:id], {status: 'uploaded_tracelog'})
+          api_clinet.update_job_info(job[:id], status: 'uploaded_tracelog')
         end
 
         def analyze(job, tracelog)
-          api_clinet.update_job_info(job[:id], {status: 'analyzing'})
+          api_clinet.update_job_info(job[:id], status: 'analyzing')
           report = Tempfile.new("report#{job[:id]}")
           Adaptor::Analyze.run(report, tracelog, job[:name])
-          api_clinet.update_job_info(job[:id], {status: 'analyzed'})
+          api_clinet.update_job_info(job[:id], status: 'analyzed')
 
-          api_clinet.update_job_info(job[:id], {status: 'uploading_report'})
+          api_clinet.update_job_info(job[:id], status: 'uploading_report')
           api_clinet.upload_report(job[:id], report.path)
-          api_clinet.update_job_info(job[:id], {status: 'uploaded_report'})
+          api_clinet.update_job_info(job[:id], status: 'uploaded_report')
         rescue FailedAnalyzeError => e
           STDERR.puts e.message
         end
