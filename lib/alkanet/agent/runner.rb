@@ -100,7 +100,7 @@ module Alkanet
 
         def logcat(job)
           tracelog = Tempfile.new("tracelog#{job[:id]}")
-          Adaptor::Logcat.run(tracelog, addr: option['addr'], time: option['time']) do
+          Adaptor::Logcat.run(tracelog, addr: option['addr'], time: job[:seconds]) do
             api_clinet.update_job_info(job[:id], status: 'collecting')
           end
 
