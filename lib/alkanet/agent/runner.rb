@@ -42,7 +42,7 @@ module Alkanet
           exit(-1)
         rescue FailedLogcatError => e
           STDERR.puts e
-          api_clinet.update_job_info(job[:id], status: 'assigned')
+          api_clinet.update_job_info(job[:id], status: 'failed')
           begin
             power('reset')
           rescue FailedPowerError => e
@@ -51,7 +51,7 @@ module Alkanet
           exit(-1)
         rescue FailedPowerError => e
           STDERR.puts e
-          api_clinet.update_job_info(job[:id], status: 'assigned')
+          api_clinet.update_job_info(job[:id], status: 'failed')
           exit(-1)
         rescue Faraday::Error::ClientError => e
           STDERR.puts e.message
