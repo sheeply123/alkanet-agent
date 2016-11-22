@@ -9,9 +9,6 @@ module Alkanet
     class FailedAnalyzeError < StandardError
     end
 
-    class FailedPowerError < StandardError
-    end
-
     class OptionError < StandardError
     end
   end

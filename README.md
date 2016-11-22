@@ -27,6 +27,22 @@ $ cd pkg
 $ gem install -b alkanet-agent-x.x.x.gem
 ```
 
+## alkanet-toolsの準備
+alk-logcatやalk-analyze2をインストールしておく。
+alk-logcatはsudo経由で使えるように設定しておく。
+
+```bash
+$ which alk-logcat
+/usr/local/rbenv/shims/alk-logcat
+$ sudo visudo
+```
+
+起動するユーザ名を指定する(ここではalkanetserver)
+```
+alkanetserver ALL=(ALL) NOPASSWD: /usr/local/rbenv/shims/alk-logcat
+```
+
+
 ## コマンドの使い方
 `--url`オプションで接続先のAlkanetServerを指定する。
 
@@ -36,4 +52,11 @@ $ gem install -b alkanet-agent-x.x.x.gem
 $ alkanet-agent --url http://localhost:3000
 ```
 
-`--analyze`オプションをつけると、ログ取得後に解析を行う。
+`--analyze`オプションをつけると、ログ取得後に解析を行う(alk-analyze2がある場合のみ)。
+
+Alkanet10を使用する場合は`--addr`オプションでアドレスを指定する。
+
+例:
+```bash
+$ alkanet-agent --addr 0x93440000
+```

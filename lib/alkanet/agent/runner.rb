@@ -21,7 +21,6 @@ module Alkanet
           tracelog = logcat(job)
 
           puts 'poweroff tracer'
-          power('poweroff')
           api_clinet.update_job_info(job[:id], status: 'poweroff_tracer')
 
           puts 'upload tracelog'
@@ -41,15 +40,6 @@ module Alkanet
           STDERR.puts e.message
           exit(-1)
         rescue FailedLogcatError => e
-          STDERR.puts e
-          api_clinet.update_job_info(job[:id], status: 'failed')
-          begin
-            power('reset')
-          rescue FailedPowerError => e
-            STDERR.puts e
-          end
-          exit(-1)
-        rescue FailedPowerError => e
           STDERR.puts e
           api_clinet.update_job_info(job[:id], status: 'failed')
           exit(-1)
@@ -125,10 +115,6 @@ module Alkanet
           api_clinet.update_job_info(job[:id], status: 'uploaded_report')
         rescue FailedAnalyzeError => e
           STDERR.puts e.message
-        end
-
-        def power(type)
-          Adaptor::Power.run(addr: option['addr'], type: type)
         end
       end
     end
