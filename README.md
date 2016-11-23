@@ -28,6 +28,7 @@ $ gem install -b alkanet-agent-x.x.x.gem
 ```
 
 ## alkanet-toolsの準備
+rbenvでrubyのバージョンを1.9.3-p484にした状態で、
 alk-logcatやalk-analyze2をインストールしておく。
 alk-logcatはsudo経由で使えるように設定しておく。
 
