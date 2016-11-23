@@ -51,6 +51,7 @@ module Alkanet
               STDERR.puts error[:message]
             end
           end
+          api_clinet.update_job_info(job[:id], status: 'failed')
           exit(-1)
         end
 
