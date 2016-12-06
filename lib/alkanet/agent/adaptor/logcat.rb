@@ -20,7 +20,14 @@ module Alkanet
             raise FailedLogcatError, 'faild to execute alk-logcat' unless $CHILD_STATUS.success?
 
             # 途中でフリーズしていないか確認
-            `sudo RBENV_VERSION=1.9.3-p484 alk-logcat #{addr} -t 0 -q`
+            IO.popen("sudo RBENV_VERSION=1.9.3-p484 alk-logcat #{addr} -q") do |pipe|
+              pipe.each do |line|
+                if line.start_with?('CAPTURE START')
+                  Process.kill('INT', pipe.pid)
+                  break
+                end
+              end
+            end
             raise FailedLogcatError, 'faild to execute alk-analyze2' unless $CHILD_STATUS.success?
           end
         end
