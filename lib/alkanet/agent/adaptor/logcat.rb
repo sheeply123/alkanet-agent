@@ -21,7 +21,7 @@ module Alkanet
 
             # 途中でフリーズしていないか確認
             `sudo RBENV_VERSION=1.9.3-p484 alk-logcat #{addr} -t 0 -q`
-            raise FailedLogcatError, 'faild to execute alk-analyze2' unless $CHILD_STATUS.success?
+            raise FailedLogcatError, 'faild to execute alk-logcat' unless $CHILD_STATUS.success?
           end
         end
       end

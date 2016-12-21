@@ -18,7 +18,7 @@ module Alkanet
           wait_changed_job_status(job, 'downloaded')
 
           puts 'execute alk-logcat'
-          tracelog = logcat(job)
+          tracelog, logcat_error = logcat(job)
 
           puts 'poweroff tracer'
           api_clinet.update_job_info(job[:id], status: 'poweroff_tracer')
@@ -33,15 +33,17 @@ module Alkanet
             puts 'skip analyze'
           end
 
-          puts 'done'
-          api_clinet.update_job_info(job[:id], status: 'done')
+          if logcat_error
+            puts 'failed'
+            api_clinet.update_job_info(job[:id], status: 'failed')
+            exit(-1)
+          else
+            puts 'done'
+            api_clinet.update_job_info(job[:id], status: 'done')
+          end
 
         rescue OptionError, MissingInfoError => e
           STDERR.puts e.message
-          exit(-1)
-        rescue FailedLogcatError => e
-          STDERR.puts e
-          api_clinet.update_job_info(job[:id], status: 'failed')
           exit(-1)
         rescue Faraday::Error::ClientError => e
           STDERR.puts e.message
@@ -90,13 +92,18 @@ module Alkanet
         end
 
         def logcat(job)
+          error = nil
           tracelog = Tempfile.new("tracelog#{job[:id]}")
-          Adaptor::Logcat.run(tracelog, addr: option['addr'], time: job[:seconds]) do
-            api_clinet.update_job_info(job[:id], status: 'collecting')
+          begin
+            Adaptor::Logcat.run(tracelog, addr: option['addr'], time: job[:seconds]) do
+              api_clinet.update_job_info(job[:id], status: 'collecting')
+            end
+          rescue FailedLogcatError => e
+            STDERR.puts e.message
+            error = e
           end
-
           api_clinet.update_job_info(job[:id], status: 'collected')
-          tracelog
+          [tracelog, error]
         end
 
         def upload_tracelog(job, tracelog)
