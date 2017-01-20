@@ -6,6 +6,7 @@ module Alkanet
       class << self
         def run(opt)
           self.option = opt
+          power_flag = true
           puts 'find collector and tracers info'
           tracers = find_tracers
 
@@ -14,7 +15,7 @@ module Alkanet
           job = find_job(tracer)
 
           puts "target job id is #{job[:id]}"
-          puts 'wait canging job status to downloaded'
+          puts 'wait changing job status to downloaded'
           wait_changed_job_status(job, 'downloaded')
 
           puts 'execute alk-logcat'
@@ -22,6 +23,7 @@ module Alkanet
 
           puts 'poweroff tracer'
           api_clinet.update_job_info(job[:id], status: 'poweroff_tracer')
+          power_flag = false
 
           puts 'upload tracelog'
           upload_tracelog(job, tracelog)
@@ -48,10 +50,14 @@ module Alkanet
         rescue Faraday::Error::ClientError => e
           STDERR.puts e.message
           res = e.response
-          if res && res[:body]
+          if res && res[:body] && res[:body].is_a? Hash
             Array(res[:body][:errors]).each do |error|
               STDERR.puts error[:message]
             end
+          end
+          if power_flag
+            puts 'poweroff tracer'
+            api_clinet.update_job_info(job[:id], status: 'poweroff_tracer')
           end
           api_clinet.update_job_info(job[:id], status: 'failed')
           exit(-1)
