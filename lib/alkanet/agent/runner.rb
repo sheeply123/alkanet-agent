@@ -50,7 +50,7 @@ module Alkanet
         rescue Faraday::Error::ClientError => e
           STDERR.puts e.message
           res = e.response
-          if res && res[:body] && res[:body].is_a? Hash
+          if res && res[:body] && res[:body].is_a?(Hash)
             Array(res[:body][:errors]).each do |error|
               STDERR.puts error[:message]
             end
