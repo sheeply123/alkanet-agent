@@ -10,7 +10,7 @@ module Alkanet
           tracers = find_tracers
 
           # 現状は1台のみ対応
-          tracer = tracers.first
+          tracer = tracers.find{|data| data[:status] != 'unused'}
           job = find_job(tracer)
 
           puts "target job id is #{job[:id]}"
