@@ -8,7 +8,7 @@ module Alkanet
           def run(file, addr:, time: 30)
             start_flag = false
 
-            IO.popen("sudo RBENV_VERSION=1.9.3-p484 alk-logcat #{addr} -o #{file.path} -t #{time} -q") do |pipe|
+            IO.popen("sudo RBENV_VERSION=1.9.3-p484 alk-logcat #{addr} -o #{file.path} -t #{time}") do |pipe|
               pipe.each do |line|
                 next unless !start_flag && line.start_with?('CAPTURE START')
                 # success to start logcat
