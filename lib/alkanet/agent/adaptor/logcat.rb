@@ -5,7 +5,7 @@ module Alkanet
     module Adaptor
       module Logcat
         class << self
-          def run(file, addr:, time: 30)
+          def run(file, time: 30)
             start_flag = false
 
             #IO.popen("sudo RBENV_VERSION=1.9.3-p484 alk-logcat #{addr} -o #{file.path} -t #{time}") do |pipe|

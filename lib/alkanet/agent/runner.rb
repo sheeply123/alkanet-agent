@@ -101,7 +101,7 @@ module Alkanet
           error = nil
           tracelog = Tempfile.new("tracelog#{job[:id]}")
           begin
-            Adaptor::Logcat.run(tracelog, addr: option['addr'], time: job[:seconds]) do
+            Adaptor::Logcat.run(tracelog, time: job[:seconds]) do
               api_clinet.update_job_info(job[:id], status: 'collecting')
             end
           rescue FailedLogcatError => e
